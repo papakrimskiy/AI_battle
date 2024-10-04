@@ -1,6 +1,6 @@
 import pygame
 import random
-import ImageRect
+import os
 
 class Obstacle:
     def __init__(self, x, y, obstacle_type):
@@ -11,9 +11,9 @@ class Obstacle:
         self.rect = pygame.Rect(x, y, self.size[0], self.size[1])
         
         if obstacle_type == "tree":
-            self.image = pygame.image.load("tree.png")
+            self.image = pygame.image.load(os.path.join("game", "tree.png"))
         elif obstacle_type == "rock":
-            self.image = pygame.image.load("rock.png")
+            self.image = pygame.image.load(os.path.join("game", "rock.png"))
 
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))

@@ -1,12 +1,15 @@
 import pygame
-from RedAgents import RedMeleeAgent
-from BlueAgents import BlueMeleeAgent
-from constants import *
-from BlueBase import BlueBase
-from RedBase import RedBase
+from game.RedAgents import RedMeleeAgent
+from game.BlueAgents import BlueMeleeAgent
+from game.constants import *
+from game.BlueBase import BlueBase
+from game.RedBase import RedBase
 import random
-from Obstacle import Obstacle
+from game.Obstacle import Obstacle
 
+# Initialize pygame font
+pygame.font.init()
+font = pygame.font.Font(None, 36)  # None uses default font, 36 is the font size
 
 running = True
 pygame.init()
@@ -14,28 +17,17 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 screen.fill(LIGHT_GREEN)
 blue_base = BlueBase(BLUE, 40, 40)
 red_base = RedBase(RED, 700, 600)
-
-# Generating agents
-# Calculate spawn area for red agents
-spawn_radius = 40  # Adjust this value as needed
-spawn_count = 1  # Number of agents to spawn per cooldown
 red_agents = []
 blue_agents = []
-for _ in range(spawn_count):
-    red_spawn_x = red_base.rect.centerx + random.randint(-spawn_radius, spawn_radius)
-    red_spawn_y = red_base.rect.centery + random.randint(-spawn_radius, spawn_radius)
-    red_agents.append(RedMeleeAgent(red_spawn_x, red_spawn_y))
-
-    blue_spawn_x = blue_base.rect.centerx + random.randint(-spawn_radius, spawn_radius)
-    blue_spawn_y = blue_base.rect.centery + random.randint(-spawn_radius, spawn_radius)
-    blue_agents.append(BlueMeleeAgent(blue_spawn_x, blue_spawn_y))
 
 # Generating obstacles
-random.seed(1)
-num_obstacles = random.randint(20, 30)
+random.seed(18) # seed for obstacles, feel free to try different seeds and find better ones
+num_obstacles = random.randint(15, 20)
 existing_rects = [blue_base.rect, red_base.rect]
 obstacles = Obstacle.generate_obstacles(num_obstacles, SCREEN_WIDTH, SCREEN_HEIGHT, existing_rects)
 
+game_over = False
+winner = None
 
 while running:
 
@@ -43,6 +35,18 @@ while running:
         # quit the game
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                running = False
+
+    # Check if the game is over
+    if not game_over:
+        if blue_base.destroyed(screen):
+            game_over = True
+            winner = "Red"
+        elif red_base.destroyed(screen):
+            game_over = True
+            winner = "Blue"
 
     # Update agents
     for agent in red_agents:
@@ -76,5 +80,12 @@ while running:
     clock.tick(30)
 
     pygame.display.update()
+
+    if game_over:
+        running = False
+        game_over_text = font.render(f"Game Over! {winner} wins!", True, (255, 0, 0))
+        text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
+        screen.blit(game_over_text, text_rect)
+        pygame.time.wait(3000)
 
 pygame.quit()
