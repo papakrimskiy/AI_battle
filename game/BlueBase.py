@@ -12,11 +12,6 @@ class BlueBase:
         self.last_spawn_time = -4000 # agents start to spawn 1 second after the game starts
         self.spawn_interval = 5000  # 5 seconds in milliseconds
 
-    def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self.rect)
-        self.draw_health_bar(screen)
-        if self.health <= 0:
-            self.display_game_over(screen, "Red team wins!")
 
     def draw_health_bar(self, screen):
         bar_width = self.rect.width
@@ -47,3 +42,9 @@ class BlueBase:
         game_over_font = pygame.font.SysFont("Arial", 60)
         text = game_over_font.render(message, True, (255, 0, 0))
         screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 - text.get_height() // 2))
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, self.rect)
+        self.draw_health_bar(screen)
+        if self.health <= 0:
+            self.display_game_over(screen, "Red team wins!")

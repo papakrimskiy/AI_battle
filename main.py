@@ -39,29 +39,25 @@ while running:
             if event.key == pygame.K_ESCAPE:
                 running = False
 
-    # Check if the game is over
-    if not game_over:
-        if blue_base.destroyed(screen):
-            game_over = True
-            winner = "Red"
-        elif red_base.destroyed(screen):
-            game_over = True
-            winner = "Blue"
+    # Remove dead agents
+    red_agents = [agent for agent in red_agents if agent.is_alive()]
+    blue_agents = [agent for agent in blue_agents if agent.is_alive()]
 
     # Update agents
-    for agent in red_agents:
-        agent.update(blue_base)  # Use base_blue as the target
-    for agent in blue_agents:
-        agent.update(red_base)  # Use base_red as the target
+    for red_agent in red_agents:
+        red_agent.update(blue_base, blue_agents)
+    for blue_agent in blue_agents:
+        blue_agent.update(red_base, red_agents)
 
     # Draw everything
     screen.fill(LIGHT_GREEN)
+    red_base.draw(screen)
+    blue_base.draw(screen)
     for agent in red_agents:
         agent.draw(screen)
     for agent in blue_agents:
         agent.draw(screen)
-    red_base.draw(screen)
-    blue_base.draw(screen)
+    
     for obstacle in obstacles:
         obstacle.draw(screen)
 
@@ -81,11 +77,21 @@ while running:
 
     pygame.display.update()
 
+    # Check if the game is over
+    if not game_over:
+        if blue_base.destroyed(screen):
+            game_over = True
+            winner = "Red"
+        elif red_base.destroyed(screen):
+            game_over = True
+            winner = "Blue"        
+
     if game_over:
         running = False
         game_over_text = font.render(f"Game Over! {winner} wins!", True, (255, 0, 0))
         text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
         screen.blit(game_over_text, text_rect)
         pygame.time.wait(3000)
+
 
 pygame.quit()
