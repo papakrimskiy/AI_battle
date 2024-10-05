@@ -15,6 +15,7 @@ class BlueMeleeAgent:
             self.last_attack_time = 0  # first attack comes 1 second after contact
             self.attack_cooldown = 1000  # 1 seconds in milliseconds
             self.attack_range = 50  # pixels
+            self.defending_base = False
 
     def find_nearest_enemy(self, red_agents):
         nearest_enemy = None
@@ -37,9 +38,41 @@ class BlueMeleeAgent:
             target.health = max(0, target.health)
             self.last_attack_time = current_time
 
-    def update(self, red_base, red_agents):
+    def is_base_under_attack(self, blue_base, red_agents):
+        for red_agent in red_agents:
+            if red_agent.is_alive() and blue_base.rect.colliderect(red_agent.image.rect):
+                return True
+        return False
+
+    def update(self, red_base, blue_base, red_agents, blue_agents):
         if not self.is_alive():
             return  # Don't update dead agents
+
+        base_under_attack = self.is_base_under_attack(blue_base, red_agents)
+
+        if base_under_attack and not self.defending_base:
+            distances = sorted([
+                (agent, math.hypot(agent.image.rect.centerx - blue_base.rect.centerx,
+                                   agent.image.rect.centery - blue_base.rect.centery))
+                for agent in blue_agents if (agent.is_alive() and not agent.image.rect.colliderect(red_base.rect))
+                                                                  # don't defend if already attacking enemy base
+            ], key=lambda x: x[1])
+            
+            closest_third = distances[:len(distances) // 3]
+            if self in [agent for agent, _ in closest_third]:
+                self.defending_base = True
+                self.target = blue_base.rect.center
+        
+        if self.defending_base:
+            if not base_under_attack:
+                self.defending_base = False
+            else:
+                self.move_towards_target()
+                nearest_enemy, distance = self.find_nearest_enemy(red_agents)
+                if nearest_enemy and distance <= self.attack_range and nearest_enemy.is_alive():
+                    self.target = nearest_enemy.image.rect.center
+                    self.attack(nearest_enemy)
+                return
 
         nearest_enemy, distance = self.find_nearest_enemy(red_agents)
         
