@@ -14,8 +14,10 @@ class RedMeleeAgent:
             self.target = None
             self.last_attack_time = 0  # first attack comes 1 second after contact
             self.attack_cooldown = 1000  # 1 seconds in milliseconds
-            self.attack_range = 50  # pixels
+            self.attack_range = 70  # pixels
             self.defending_base = False
+            self.reached_initial_position = False
+            self.initial_position = (x, y)
 
     def find_nearest_enemy(self, blue_agents):
         nearest_enemy = None
@@ -44,9 +46,16 @@ class RedMeleeAgent:
                 return True
         return False
 
-    def update(self, blue_base, red_base, blue_agents, red_agents):
+    def update(self, blue_base, red_base, blue_agents, red_agents, obstacles):
         if not self.is_alive():
             return  # Don't update dead agents
+
+        if not self.reached_initial_position:
+            self.target = self.initial_position
+            self.move_towards_target(obstacles)
+            if self.image.rect.center == self.initial_position:
+                self.reached_initial_position = True
+            return
 
         base_under_attack = self.is_base_under_attack(red_base, blue_agents)
 
@@ -67,7 +76,7 @@ class RedMeleeAgent:
             if not base_under_attack:
                 self.defending_base = False
             else:
-                self.move_towards_target()
+                self.move_towards_target(obstacles)
                 nearest_enemy, distance = self.find_nearest_enemy(blue_agents)
                 if nearest_enemy and distance <= self.attack_range and nearest_enemy.is_alive():
                     self.target = nearest_enemy.image.rect.center
@@ -83,23 +92,45 @@ class RedMeleeAgent:
                 if not nearest_enemy.is_alive():
                     self.target = None  # Reset target if enemy is killed
             else:
-                self.move_towards_target()
+                self.move_towards_target(obstacles)
         else:
             self.target = blue_base.rect.center
-            self.move_towards_target()
+            self.move_towards_target(obstacles)
             if self.image.rect.colliderect(blue_base.rect):
                 self.speed = 0
                 self.attack(blue_base)
 
-    def move_towards_target(self):
-        if self.target:
-            dx = self.target[0] - self.image.rect.centerx
-            dy = self.target[1] - self.image.rect.centery
-            dist = math.hypot(dx, dy)
-            if dist != 0:
-                dx, dy = dx / dist, dy / dist
-                self.image.rect.x += dx * self.speed
-                self.image.rect.y += dy * self.speed
+    def move_towards_target(self, obstacles):
+        if not self.target:
+            return
+
+        dx = self.target[0] - self.image.rect.centerx
+        dy = self.target[1] - self.image.rect.centery
+        distance = math.hypot(dx, dy)
+
+        if distance > self.speed:
+            dx, dy = dx / distance, dy / distance
+            new_x = self.image.rect.x + dx * self.speed
+            new_y = self.image.rect.y + dy * self.speed
+
+            # Check for collisions
+            new_rect = self.image.rect.copy()
+            new_rect.x = new_x
+            new_rect.y = new_y
+
+            if not any(new_rect.colliderect(obstacle.rect) for obstacle in obstacles):
+                self.image.rect = new_rect
+            else:
+                # Simple avoidance: try moving horizontally or vertically
+                new_rect_x = self.image.rect.copy()
+                new_rect_x.x = new_x
+                new_rect_y = self.image.rect.copy()
+                new_rect_y.y = new_y
+
+                if not any(new_rect_x.colliderect(obstacle.rect) for obstacle in obstacles):
+                    self.image.rect.x = new_x
+                elif not any(new_rect_y.colliderect(obstacle.rect) for obstacle in obstacles):
+                    self.image.rect.y = new_y
 
     def draw(self, screen):
         screen.blit(self.image.image, self.image.rect)

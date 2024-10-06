@@ -45,9 +45,9 @@ while running:
 
     # Update agents
     for red_agent in red_agents:
-        red_agent.update(blue_base, red_base, blue_agents, red_agents)
+        red_agent.update(blue_base, red_base, blue_agents, red_agents, obstacles)
     for blue_agent in blue_agents:
-        blue_agent.update(red_base, blue_base, red_agents, blue_agents)
+        blue_agent.update(red_base, blue_base, red_agents, blue_agents, obstacles)
 
     # Draw everything
     screen.fill(LIGHT_GREEN)
@@ -73,7 +73,7 @@ while running:
 
     # Set framerate cap
     clock = pygame.time.Clock()
-    clock.tick(70)
+    clock.tick(30)
 
     pygame.display.update()
 
