@@ -27,9 +27,9 @@ class RedMeleeAgent:
     def __init__(self, x: int, y: int):
         self.image = ImageRect(x, y, os.path.join("game", "RedMeleeAgent.png"))
         self.speed = 2
-        self.max_health = 100
+        self.max_health = 500  # Увеличиваем здоровье в 5 раз
         self.health = self.max_health
-        self.damage = 10
+        self.damage = 20  # Увеличиваем урон в 2 раза
         self.target: Optional[Tuple[int, int]] = None
         self.last_attack_time = 0
         self.attack_cooldown = 1000
@@ -52,7 +52,7 @@ class RedMeleeAgent:
         my_position = np.array(self.image.rect.center)
 
         distances = np.linalg.norm(agent_positions - my_position, axis=1)
-        visible_mask = np.ones(len(agent_positions), dtype=bool)  # Все враги видимы
+        visible_mask = np.ones(len(agent_positions), dtype=bool)  # Все ��раги видимы
 
         if not np.any(visible_mask):
             return None, float('inf')
@@ -76,12 +76,35 @@ class RedMeleeAgent:
     def is_base_under_attack(self, red_base: RedBase, blue_agents: List[BlueMeleeAgent], obstacles: List[Obstacle]) -> bool:
         return any(agent.is_alive() and red_base.rect.colliderect(agent.image.rect) for agent in blue_agents)
 
-    def update(self, blue_base: BlueBase, red_base: RedBase, blue_agents: List[BlueMeleeAgent], red_agents: List['RedMeleeAgent'], obstacles: List[Obstacle]):
+    def choose_action(self, state, red_base, blue_agents, obstacles):
+        # Пример простого выбора действия
+        if self.is_base_under_attack(red_base, blue_agents, obstacles):
+            return 'defend'
+        elif self.health < self.max_health * 0.3:
+            return 'retreat'
+        else:
+            return 'attack'
+
+    def perform_action(self, action, blue_base, red_base, blue_agents, red_agents, obstacles):
+        if action == 'attack':
+            self.move_towards_enemy_base(blue_base)
+        elif action == 'defend':
+            self.defend_base(red_base, blue_agents)
+        elif action == 'retreat':
+            self.retreat([(red_base.rect.x, red_base.rect.y)])
+        # Добавьте другие действия по мере необходимости
+
+    def update(self, blue_base, red_base, blue_agents, red_agents, obstacles):
         if not self.is_alive():
             return
+        state = self.get_state(blue_base, red_base, blue_agents, red_agents, obstacles)
+        action = self.choose_action(state, red_base, blue_agents, obstacles)
+        self.perform_action(action, blue_base, red_base, blue_agents, red_agents, obstacles)
 
-        # Здесь будет логика выбора действия на основе машинного обучения
-        pass
+    def get_state(self, blue_base, red_base, blue_agents, red_agents, obstacles):
+        # Преобразование текущего состояния в вектор признаков
+        # Например, расстояние до базы, количество врагов поблизости и т.д.
+        return []
 
     def move_towards_enemy_base(self, blue_base: BlueBase):
         target_position = np.array(blue_base.rect.center)
@@ -221,7 +244,7 @@ class RedMeleeAgent:
             normalized_direction = direction / distance
             new_position = np.array(self.image.rect.center) + self.speed * normalized_direction
 
-        # Ограничиваем новую позицию в пределах экрана
+        # Ограничиваем новую позицию в преде��ах экрана
         new_position = np.clip(new_position, [0, 0], [SCREEN_WIDTH, SCREEN_HEIGHT])
 
         # Преобразуем в целые числа перед присваиванием
@@ -247,7 +270,7 @@ class RedMeleeAgent:
 
     def set_ambush(self, strategic_points: List[Tuple[int, int]]):
         """
-        Засада: выбор стратегической точки для засады.
+        Засада: вбор стратегической точки для засады.
         """
         if not hasattr(self, 'ambush_point'):
             self.ambush_point = random.choice(strategic_points)
@@ -286,3 +309,4 @@ class RedMeleeAgent:
             self.move_towards(tuple(position))
 
         # Можно добавить другие типы формаций
+

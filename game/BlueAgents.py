@@ -27,9 +27,9 @@ class BlueMeleeAgent:
     def __init__(self, x: int, y: int):
         self.image = ImageRect(x, y, os.path.join("game", "BlueMeleeAgent.png"))
         self.speed = 2
-        self.max_health = 100
+        self.max_health = 500  # Увеличиваем здоровье в 5 раз
         self.health = self.max_health
-        self.damage = 10
+        self.damage = 20  # Увеличиваем урон в 2 раза
         self.target: Optional[Tuple[int, int]] = None
         self.last_attack_time = 0
         self.attack_cooldown = 1000
@@ -76,12 +76,35 @@ class BlueMeleeAgent:
     def is_base_under_attack(self, blue_base: BlueBase, red_agents: List[RedMeleeAgent], obstacles: List[Obstacle]) -> bool:
         return any(agent.is_alive() and blue_base.rect.colliderect(agent.image.rect) for agent in red_agents)
 
-    def update(self, red_base: RedBase, blue_base: BlueBase, red_agents: List[RedMeleeAgent], blue_agents: List['BlueMeleeAgent'], obstacles: List[Obstacle]):
+    def choose_action(self, state, blue_base, red_agents, obstacles):
+        # Пример простого выбора действия
+        if self.is_base_under_attack(blue_base, red_agents, obstacles):
+            return 'defend'
+        elif self.health < self.max_health * 0.3:
+            return 'retreat'
+        else:
+            return 'attack'
+
+    def perform_action(self, action, red_base, blue_base, red_agents, blue_agents, obstacles):
+        if action == 'attack':
+            self.move_towards_enemy_base(red_base)
+        elif action == 'defend':
+            self.defend_base(blue_base, red_agents)
+        elif action == 'retreat':
+            self.retreat([(blue_base.rect.x, blue_base.rect.y)])
+        # Добавьте другие действия по мере необходимости
+
+    def update(self, red_base, blue_base, red_agents, blue_agents, obstacles):
         if not self.is_alive():
             return
+        state = self.get_state(red_base, blue_base, red_agents, blue_agents, obstacles)
+        action = self.choose_action(state, blue_base, red_agents, obstacles)
+        self.perform_action(action, red_base, blue_base, red_agents, blue_agents, obstacles)
 
-        # Здесь будет логика выбора действия на основе машинного обучения
-        pass
+    def get_state(self, red_base, blue_base, red_agents, blue_agents, obstacles):
+        # Преобразование текущего состояния в вектор признаков
+        # Например, расстояние до базы, количество врагов поблизости и т.д.
+        return []
 
     def move_towards_enemy_base(self, red_base: RedBase):
         target_position = np.array(red_base.rect.center)
@@ -251,7 +274,7 @@ class BlueMeleeAgent:
 
     def scout(self, unexplored_areas: List[Tuple[int, int]]):
         """
-        Разведка: исследование неизвестных областей карты.
+        Разведка: исследование неивестных областей карты.
         """
         if not hasattr(self, 'current_scout_target'):
             self.current_scout_target = random.choice(unexplored_areas)
