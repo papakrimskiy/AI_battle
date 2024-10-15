@@ -57,7 +57,7 @@ while running:
         agent.draw(screen)
     for agent in blue_agents:
         agent.draw(screen)
-    
+
     for obstacle in obstacles:
         obstacle.draw(screen)
 
@@ -84,7 +84,7 @@ while running:
             winner = "Red"
         elif red_base.destroyed(screen):
             game_over = True
-            winner = "Blue"        
+            winner = "Blue"
 
     if game_over:
         running = False
