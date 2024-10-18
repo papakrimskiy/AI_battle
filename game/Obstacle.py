@@ -9,7 +9,7 @@ class Obstacle:
         self.obstacle_type = obstacle_type # tree or rock
         self.size = (40, 40)  # Adjust this based on your actual image sizes
         self.rect = pygame.Rect(x, y, self.size[0], self.size[1])
-        
+
         if obstacle_type == "tree":
             self.image = pygame.image.load(os.path.join("game", "tree.png"))
         elif obstacle_type == "rock":
@@ -26,7 +26,7 @@ class Obstacle:
                 x = random.randint(0, screen_width - 40)
                 y = random.randint(0, screen_height - 40)
                 new_rect = pygame.Rect(x, y, 40, 40)
-                
+
                 if not any(new_rect.colliderect(rect) for rect in existing_rects):
                     obstacle_type = random.choice(["tree", "tree", "rock"])
                     obstacles.append(Obstacle(x, y, obstacle_type))

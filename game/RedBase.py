@@ -17,10 +17,10 @@ class RedBase:
         bar_width = self.rect.width
         bar_height = 10
         bar_position = (self.rect.x, self.rect.y - 20)
-        
+
         # Draw background (black bar)
         pygame.draw.rect(screen, (0, 0, 0), (*bar_position, bar_width, bar_height))
-        
+
         # Draw health (green bar)
         health_width = int(self.health / self.max_health * bar_width)
         pygame.draw.rect(screen, (0, 255, 0), (*bar_position, health_width, bar_height))

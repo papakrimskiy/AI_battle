@@ -29,6 +29,9 @@ obstacles = Obstacle.generate_obstacles(num_obstacles, SCREEN_WIDTH, SCREEN_HEIG
 game_over = False
 winner = None
 
+# Создаем объект Clock для управления FPS
+clock = pygame.time.Clock()
+
 while running:
 
     for event in pygame.event.get():
@@ -57,7 +60,7 @@ while running:
         agent.draw(screen)
     for agent in blue_agents:
         agent.draw(screen)
-    
+
     for obstacle in obstacles:
         obstacle.draw(screen)
 
@@ -71,9 +74,8 @@ while running:
     blue_agents.extend(blue_base.agents_list)
     blue_base.agents_list.clear()
 
-    # Set framerate cap
-    clock = pygame.time.Clock()
-    clock.tick(30)
+    # Устанавливаем частоту кадров в 60 FPS
+    clock.tick(60)
 
     pygame.display.update()
 
@@ -84,14 +86,14 @@ while running:
             winner = "Red"
         elif red_base.destroyed(screen):
             game_over = True
-            winner = "Blue"        
+            winner = "Blue"
 
     if game_over:
         running = False
         game_over_text = font.render(f"Game Over! {winner} wins!", True, (255, 0, 0))
         text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
         screen.blit(game_over_text, text_rect)
+        pygame.display.update()
         pygame.time.wait(3000)
-
 
 pygame.quit()
