@@ -7,6 +7,8 @@ from game.BlueBase import BlueBase
 from game.RedBase import RedBase
 import random
 from game.Obstacle import Obstacle
+from game.BlueRangedAgent import BlueRangedAgent
+from game.RedRangedAgent import RedRangedAgent
 
 # Initialize pygame font
 pygame.font.init()
@@ -18,10 +20,12 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 screen.fill(LIGHT_GREEN)
 blue_base = BlueBase(BLUE, 40, 40)
 red_base = RedBase(RED, 700, 600)
-red_agents = []
-blue_agents = []
+red_melee_agents = []  # Changed from red_agents to red_melee_agents
+blue_melee_agents = []  # Changed from blue_agents to blue_melee_agents
 red_tanks = []  # Добавляем список для красных танков
 blue_tanks = []  # Добавляем список для синих танков
+red_ranged_agents = []  # Добавляем список для красных дальнобойных агентов
+blue_ranged_agents = []  # Добавляем список для синих дальнобойных агентов
 
 # Generating obstacles
 random.seed(18) # seed for obstacles, feel free to try different seeds and find better ones
@@ -46,26 +50,32 @@ while running:
                 running = False
 
     # Remove dead agents and tanks
-    red_agents = [agent for agent in red_agents if agent.is_alive()]
-    blue_agents = [agent for agent in blue_agents if agent.is_alive()]
+    red_melee_agents = [agent for agent in red_melee_agents if agent.is_alive()]
+    blue_melee_agents = [agent for agent in blue_melee_agents if agent.is_alive()]
     red_tanks = [tank for tank in red_tanks if tank.is_alive()]
     blue_tanks = [tank for tank in blue_tanks if tank.is_alive()]
+    red_ranged_agents = [agent for agent in red_ranged_agents if agent.is_alive()]
+    blue_ranged_agents = [agent for agent in blue_ranged_agents if agent.is_alive()]
 
     # Update agents and tanks
-    for red_agent in red_agents:
-        red_agent.update(blue_base, red_base, blue_agents + blue_tanks, red_agents + red_tanks, obstacles)
-    for blue_agent in blue_agents:
-        blue_agent.update(red_base, blue_base, red_agents + red_tanks, blue_agents + blue_tanks, obstacles)
+    for red_melee_agent in red_melee_agents:  # Updated variable name
+        red_melee_agent.update(blue_base, red_base, blue_melee_agents + blue_tanks + blue_ranged_agents, red_melee_agents + red_tanks + red_ranged_agents, obstacles)
+    for blue_melee_agent in blue_melee_agents:  # Updated variable name
+        blue_melee_agent.update(red_base, blue_base, red_melee_agents + red_tanks + red_ranged_agents, blue_melee_agents + blue_tanks + blue_ranged_agents, obstacles)
     for red_tank in red_tanks:
-        red_tank.update(blue_base, red_base, blue_agents + blue_tanks, red_agents + red_tanks, obstacles)
+        red_tank.update(blue_base, red_base, blue_melee_agents + blue_tanks + blue_ranged_agents, red_melee_agents + red_tanks + red_ranged_agents, obstacles)
     for blue_tank in blue_tanks:
-        blue_tank.update(red_base, blue_base, red_agents + red_tanks, blue_agents + blue_tanks, obstacles)
+        blue_tank.update(red_base, blue_base, red_melee_agents + red_tanks + red_ranged_agents, blue_melee_agents + blue_tanks + blue_ranged_agents, obstacles)
+    for red_ranged_agent in red_ranged_agents:  # Обновляем красных дальнобойных агентов
+        red_ranged_agent.update(blue_base, red_base, blue_melee_agents + blue_tanks + blue_ranged_agents, red_melee_agents + red_tanks + red_ranged_agents, obstacles)
+    for blue_ranged_agent in blue_ranged_agents:  # Обновляем синих дальнобойных агентов
+        blue_ranged_agent.update(red_base, blue_base, red_melee_agents + red_tanks + red_ranged_agents, blue_melee_agents + blue_tanks + blue_ranged_agents, obstacles)
 
     # Draw everything
     screen.fill(LIGHT_GREEN)
     red_base.draw(screen)
     blue_base.draw(screen)
-    for agent in red_agents + blue_agents + red_tanks + blue_tanks:
+    for agent in red_melee_agents + blue_melee_agents + red_tanks + blue_tanks + red_ranged_agents + blue_ranged_agents:
         agent.draw(screen)
 
     for obstacle in obstacles:
@@ -76,10 +86,12 @@ while running:
     blue_base.update()
 
     # Add newly spawned agents and tanks to the lists
-    red_agents.extend([agent for agent in red_base.agents_list if isinstance(agent, RedMeleeAgent)])
+    red_melee_agents.extend([agent for agent in red_base.agents_list if isinstance(agent, RedMeleeAgent)])  # Updated variable name
     red_tanks.extend([agent for agent in red_base.agents_list if isinstance(agent, TankAgent)])
-    blue_agents.extend([agent for agent in blue_base.agents_list if isinstance(agent, BlueMeleeAgent)])
+    red_ranged_agents.extend([agent for agent in red_base.agents_list if isinstance(agent, RedRangedAgent)])  # Добавляем дальнобойных агентов
+    blue_melee_agents.extend([agent for agent in blue_base.agents_list if isinstance(agent, BlueMeleeAgent)])  # Updated variable name
     blue_tanks.extend([agent for agent in blue_base.agents_list if isinstance(agent, TankAgent)])
+    blue_ranged_agents.extend([agent for agent in blue_base.agents_list if isinstance(agent, BlueRangedAgent)])  # Добавляем дальнобойных агентов
     red_base.agents_list.clear()
     blue_base.agents_list.clear()
 

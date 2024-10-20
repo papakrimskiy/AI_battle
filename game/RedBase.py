@@ -1,6 +1,7 @@
 import pygame
 from .RedAgents import RedMeleeAgent
 from .TankAgent import TankAgent
+from .RedRangedAgent import RedRangedAgent
 from .constants import SCREEN_HEIGHT, SCREEN_WIDTH
 import random
 
@@ -36,6 +37,8 @@ class RedBase:
     def spawn_agent(self):
         if random.random() < 0.2:  # 20% шанс создания танка
             new_agent = TankAgent(self.rect.centerx, self.rect.centery, "red")
+        elif random.random() < 0.4:
+            new_agent = RedRangedAgent(self.rect.centerx, self.rect.centery, "red") 
         else:
             new_agent = RedMeleeAgent(self.rect.centerx, self.rect.centery)
         self.agents_list.append(new_agent)
