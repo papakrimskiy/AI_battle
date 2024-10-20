@@ -1,6 +1,8 @@
 import pygame
 from .RedAgents import RedMeleeAgent
+from .TankAgent import TankAgent
 from .constants import SCREEN_HEIGHT, SCREEN_WIDTH
+import random
 
 class RedBase:
     def __init__(self, color: tuple, x, y):
@@ -32,7 +34,10 @@ class RedBase:
             self.last_spawn_time = current_time
 
     def spawn_agent(self):
-        new_agent = RedMeleeAgent(self.rect.centerx, self.rect.centery)
+        if random.random() < 0.2:  # 20% шанс создания танка
+            new_agent = TankAgent(self.rect.centerx, self.rect.centery, "red")
+        else:
+            new_agent = RedMeleeAgent(self.rect.centerx, self.rect.centery)
         self.agents_list.append(new_agent)
 
     def destroyed(self, screen):

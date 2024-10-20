@@ -1,5 +1,7 @@
 import pygame
 from .BlueAgents import BlueMeleeAgent
+from .TankAgent import TankAgent
+import random
 from .constants import SCREEN_HEIGHT, SCREEN_WIDTH
 
 class BlueBase:
@@ -32,7 +34,10 @@ class BlueBase:
             self.last_spawn_time = current_time
 
     def spawn_agent(self):
-        new_agent = BlueMeleeAgent(self.rect.centerx, self.rect.centery)
+        if random.random() < 0.2:  # 20% шанс создания танка
+            new_agent = TankAgent(self.rect.centerx, self.rect.centery, "blue")
+        else:
+            new_agent = BlueMeleeAgent(self.rect.centerx, self.rect.centery)
         self.agents_list.append(new_agent)
 
     def destroyed(self, screen):

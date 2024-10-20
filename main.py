@@ -1,6 +1,7 @@
 import pygame
 from game.RedAgents import RedMeleeAgent
 from game.BlueAgents import BlueMeleeAgent
+from game.TankAgent import TankAgent  # Добавляем импорт TankAgent
 from game.constants import *
 from game.BlueBase import BlueBase
 from game.RedBase import RedBase
@@ -19,6 +20,8 @@ blue_base = BlueBase(BLUE, 40, 40)
 red_base = RedBase(RED, 700, 600)
 red_agents = []
 blue_agents = []
+red_tanks = []  # Добавляем список для красных танков
+blue_tanks = []  # Добавляем список для синих танков
 
 # Generating obstacles
 random.seed(18) # seed for obstacles, feel free to try different seeds and find better ones
@@ -42,36 +45,42 @@ while running:
             if event.key == pygame.K_ESCAPE:
                 running = False
 
-    # Remove dead agents
+    # Remove dead agents and tanks
     red_agents = [agent for agent in red_agents if agent.is_alive()]
     blue_agents = [agent for agent in blue_agents if agent.is_alive()]
+    red_tanks = [tank for tank in red_tanks if tank.is_alive()]
+    blue_tanks = [tank for tank in blue_tanks if tank.is_alive()]
 
-    # Update agents
+    # Update agents and tanks
     for red_agent in red_agents:
-        red_agent.update(blue_base, red_base, blue_agents, red_agents, obstacles)
+        red_agent.update(blue_base, red_base, blue_agents + blue_tanks, red_agents + red_tanks, obstacles)
     for blue_agent in blue_agents:
-        blue_agent.update(red_base, blue_base, red_agents, blue_agents, obstacles)
+        blue_agent.update(red_base, blue_base, red_agents + red_tanks, blue_agents + blue_tanks, obstacles)
+    for red_tank in red_tanks:
+        red_tank.update(blue_base, red_base, blue_agents + blue_tanks, red_agents + red_tanks, obstacles)
+    for blue_tank in blue_tanks:
+        blue_tank.update(red_base, blue_base, red_agents + red_tanks, blue_agents + blue_tanks, obstacles)
 
     # Draw everything
     screen.fill(LIGHT_GREEN)
     red_base.draw(screen)
     blue_base.draw(screen)
-    for agent in red_agents:
-        agent.draw(screen)
-    for agent in blue_agents:
+    for agent in red_agents + blue_agents + red_tanks + blue_tanks:
         agent.draw(screen)
 
     for obstacle in obstacles:
         obstacle.draw(screen)
 
-    # Update bases to spawn agents
+    # Update bases to spawn agents and tanks
     red_base.update()
     blue_base.update()
 
-    # Add newly spawned agents to the red_agents list
-    red_agents.extend(red_base.agents_list)
+    # Add newly spawned agents and tanks to the lists
+    red_agents.extend([agent for agent in red_base.agents_list if isinstance(agent, RedMeleeAgent)])
+    red_tanks.extend([agent for agent in red_base.agents_list if isinstance(agent, TankAgent)])
+    blue_agents.extend([agent for agent in blue_base.agents_list if isinstance(agent, BlueMeleeAgent)])
+    blue_tanks.extend([agent for agent in blue_base.agents_list if isinstance(agent, TankAgent)])
     red_base.agents_list.clear()
-    blue_agents.extend(blue_base.agents_list)
     blue_base.agents_list.clear()
 
     # Устанавливаем частоту кадров в 60 FPS
