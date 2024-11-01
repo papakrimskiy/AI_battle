@@ -43,26 +43,44 @@
 
 ## Структура проекта
 project/
-├── main.py # Точка входа в программу
-├── game_system/ # Игровая система
-│ ├── game_manager.py # Управление игрой
-│ ├── config.py # Конфигурация
-│ └── csv_logger.py # Логирование
-├── entities/ # Игровые объекты
-│ ├── robot.py # Классы роботов
-│ ├── base.py # Базы команд
-│ ├── obstacle.py # Препятствия
-│ ├── pathfinder.py # Поиск пути
-│ └── projectile.py # Снаряды
-├── genetic/ # Генетические алгоритмы
-│ ├── chromosome.py # Гены
-│ ├── fitness.py # Оценка приспособленности
-│ ├── population.py # Управление популяцией
-│ ├── visualizer.py # Визуализация данных
-│ └── data_handler.py # Обработка данных
-├── logs/ # Файлы логов
-└── genetic_plots/ # Графики эволюции
 
+├── main.py                 # Точка входа в программу
+
+├── game_system/           # Игровая система
+
+│   ├── game_manager.py    # Управление игрой
+
+│   ├── config.py         # Конфигурация
+
+│   └── csv_logger.py     # Логирование
+
+├── entities/             # Игровые объекты
+
+│   ├── robot.py         # Классы роботов  
+
+│   ├── base.py          # Базы команд
+
+│   ├── obstacle.py      # Препятствия
+
+│   ├── pathfinder.py    # Поиск пути
+
+│   └── projectile.py    # Снаряды
+
+├── genetic/             # Генетические алгоритмы
+
+│   ├── chromosome.py    # Гены
+
+│   ├── fitness.py       # Оценка приспособленности
+
+│   ├── population.py    # Управление популяцией
+
+│   ├── visualizer.py    # Визуализация данных
+
+│   └── data_handler.py  # Обработка данных
+
+├── logs/                # Файлы логов
+
+└── genetic_plots/       # Графики эволюции
 
 ## Установка
 
