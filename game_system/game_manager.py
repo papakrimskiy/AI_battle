@@ -11,6 +11,7 @@ from genetic.evolution import Evolution
 from genetic.config import GeneticConfig
 from genetic.data_handler import DataHandler
 from game_system.csv_logger import CSVLogger
+from game_system.squad_system import SquadManager
 
 class GameManager:
     """Класс управления игровым процессом"""
@@ -22,9 +23,12 @@ class GameManager:
         self.running = True
         self.max_robots_per_team = 6  # Максимальное количество роботов в команде
 
-        self._initialize_game_objects()
+        self.squad_manager = SquadManager()
+
         self.blue_robots = []
         self.red_robots = []
+
+        self._initialize_game_objects()
         self.pathfinder = PathFinder(self.obstacles)
 
         # Инициализация эволюции должна быт до инициализации роботов
@@ -81,6 +85,25 @@ class GameManager:
         # Создание препятствий
         self.obstacles = self._generate_obstacles()
 
+        # Создание начальных отрядов
+        self._initialize_squads()
+
+    def _initialize_squads(self) -> None:
+        """Инициализация отрядов"""
+        # Пример создания отрядов
+        attack_squad = self.squad_manager.create_squad('blue', 1, 'attack', 1)
+        defense_squad = self.squad_manager.create_squad('blue', 1, 'defense', 1)
+        base_squad = self.squad_manager.create_squad('blue', 1, 'base', 1)
+
+        # Распределение роботов по отрядам
+        for robot in self.blue_robots:
+            if isinstance(robot, MeleeRobot):
+                attack_squad.add_robot(robot)
+            elif isinstance(robot, TankRobot):
+                defense_squad.add_robot(robot)
+            else:
+                base_squad.add_robot(robot)
+
     def update(self) -> None:
         """Обновление игровой логики"""
         current_time = pygame.time.get_ticks()
@@ -109,6 +132,23 @@ class GameManager:
 
         for robot_type in ['MeleeRobot', 'RangedRobot', 'TankRobot']:
             self.csv_logger.log_robot_statistics(robot_type, self.blue_robots + self.red_robots)
+
+        # Обновление состояния отрядов
+        self.squad_manager.update(self.red_base.current_health, len(self.red_robots), len(self.blue_robots))
+
+        # Проверка состояния баз
+        self._check_bases()
+
+    def _check_bases(self) -> None:
+        """Проверка состояния баз и определение победителя"""
+        if self.blue_base.current_health <= 0 or self.red_base.current_health <= 0:
+            if self.blue_base.current_health > self.red_base.current_health:
+                print("Синие победили!")
+            elif self.red_base.current_health > self.blue_base.current_health:
+                print("Красные победили!")
+            else:
+                print("Ничья!")
+            self.running = False
 
     def _handle_robot_spawning(self, current_time: int) -> None:
         """Обработка спавна новых роботов"""

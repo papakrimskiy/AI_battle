@@ -18,7 +18,7 @@ class BaseEntity(ABC):
 
 class GameBase(BaseEntity):
     """Базовый класс для игровых баз"""
-    def __init__(self, x: int, y: int, color: tuple, team: Team, health: int = 5000):
+    def __init__(self, x: int, y: int, color: tuple, team: Team, health: int = 1000):
         super().__init__(x, y)
         self.color = color
         self.radius = 40

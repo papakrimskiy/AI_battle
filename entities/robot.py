@@ -5,6 +5,7 @@ import numpy as np
 from enum import Enum
 from typing import List, Optional
 from entities.projectile import Projectile
+import random
 
 class Team(Enum):
     """Перечисление для команд"""
@@ -291,6 +292,27 @@ class MeleeRobot(Robot):
         # Отрисовка полоски здоровья
         super().draw(screen)
 
+    def _attack(self, target: 'Robot' or 'GameBase') -> None:
+        """Атака цели с учетом комбо-множителя и вампиризма"""
+        if isinstance(target, Robot):
+            current_time = pygame.time.get_ticks()
+            if current_time - self.last_attack_time >= self.attack_cooldown:
+                # Получаем значения из генов или используем значения по умолчанию
+                combo_multiplier = getattr(self.genes, 'combo_multiplier', 1.0) if self.genes else 1.0
+                lifesteal_rate = getattr(self.genes, 'lifesteal_rate', 0.0) if self.genes else 0.0
+
+                # Применяем комбо-множитель к урону
+                total_damage = self.damage * combo_multiplier
+                target.take_damage(total_damage)
+
+                # Восстановление здоровья через вампиризм
+                heal_amount = total_damage * lifesteal_rate
+                self.health = min(self.max_health, self.health + heal_amount)
+
+                if not target.is_alive():
+                    self.kills += 1
+                self.last_attack_time = current_time
+
 class RangedRobot(Robot):
     """Робот дальнего боя"""
     def __init__(self, x: int, y: int, team: Team):
@@ -398,6 +420,32 @@ class RangedRobot(Robot):
         for projectile in self.projectiles:
             projectile.draw(screen)
 
+    def _attack(self, target: 'Robot' or 'GameBase') -> None:
+        """Атака цели с учетом точности и мультивыстрела"""
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_attack_time >= self.attack_cooldown:
+            # Определяем количество выстрелов
+            shots = 1
+
+            # Проверяем наличие генов и используем значения по умолчанию если их нет
+            multishot_chance = getattr(self.genes, 'multishot_chance', 0.0) if self.genes else 0.0
+            accuracy = getattr(self.genes, 'accuracy', 0.7) if self.genes else 0.7
+
+            if random.random() < multishot_chance:
+                shots = random.randint(2, 3)  # 2-3 выстрела при срабатывании мультивыстрела
+
+            for _ in range(shots):
+                if random.random() < accuracy:  # Проверка на попадание
+                    if isinstance(target, Robot):
+                        target.take_damage(self.damage)
+                        if not target.is_alive():
+                            self.kills += 1
+                    else:  # Если цель - база
+                        target.current_health -= self.damage
+                        self.base_damage_dealt += self.damage
+
+            self.last_attack_time = current_time
+
 class TankRobot(Robot):
     """Робот-танк"""
     def __init__(self, x: int, y: int, team: Team):
@@ -429,7 +477,7 @@ class TankRobot(Robot):
 
         super().update(allies, enemies, obstacles, enemy_base)
 
-        # Проверка агрессивности для принятия решений
+        # Проверка агрессивности для п��инятия решений
         if self._can_attack_base(enemy_base):
             relative_strength = self.health / self.max_health
             if relative_strength > self.attack_threshold:
