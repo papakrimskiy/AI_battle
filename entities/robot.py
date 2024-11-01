@@ -77,7 +77,7 @@ class PathFinder:
         return list(reversed(path))
 
 class Robot(ABC):
-    """Базовый кл��сс для всех роботов"""
+    """Базовый класс для всех роботов"""
     def __init__(self, x: int, y: int, team: Team):
         self.position = np.array([x, y], dtype=float)
         self.team = team
@@ -267,22 +267,50 @@ class MeleeRobot(Robot):
         if not self.is_alive():
             return
 
-        # Сначала проверяем возможность атаки базы
-        if self._can_attack_base(enemy_base):
-            self._attack_base(enemy_base)
-            return
+        # Новый код: Проверка команды
+        if self.team == Team.BLUE:  # Команда, которая следует текущему алгоритму
+            # Сначала проверяем возможность атаки базы
+            if self._can_attack_base(enemy_base):
+                self._attack_base(enemy_base)
+                return
 
-        # Существующая логика атаки враг��в
-        nearest_enemy = self._find_nearest_enemy(enemies)
-        if nearest_enemy:
-            dist_to_enemy = self.distance_to(nearest_enemy.position)
-            if dist_to_enemy <= self.attack_range:
-                self._attack(nearest_enemy)
-            elif dist_to_enemy <= self.detection_range:
-                self._avoid_obstacles_and_move(nearest_enemy.position, obstacles)
-        else:
-            # Если нет врагов, двигаемся к вражеской базе
+            # Существующая логика атаки врагов
+            nearest_enemy = self._find_nearest_enemy(enemies)
+            if nearest_enemy:
+                dist_to_enemy = self.distance_to(nearest_enemy.position)
+                if dist_to_enemy <= self.attack_range:
+                    self._attack(nearest_enemy)
+                elif dist_to_enemy <= self.detection_range:
+                    self._avoid_obstacles_and_move(nearest_enemy.position, obstacles)
+            else:
+                # Если нет врагов, двигаемся к вражеской базе
+                self.move_along_path(np.array([enemy_base.x, enemy_base.y]), obstacles)
+        else:  # Команда, которая просто идет к базе противника
+            if self._can_attack_base(enemy_base):
+                self._attack_base(enemy_base)
+                return
             self.move_along_path(np.array([enemy_base.x, enemy_base.y]), obstacles)
+
+        # Старый код (закомментирован):
+        # if not self.is_alive():
+        #     return
+        #
+        # # Сначала проверяем возможность атаки базы
+        # if self._can_attack_base(enemy_base):
+        #     self._attack_base(enemy_base)
+        #     return
+        #
+        # # Существующая логика атаки врагов
+        # nearest_enemy = self._find_nearest_enemy(enemies)
+        # if nearest_enemy:
+        #     dist_to_enemy = self.distance_to(nearest_enemy.position)
+        #     if dist_to_enemy <= self.attack_range:
+        #         self._attack(nearest_enemy)
+        #     elif dist_to_enemy <= self.detection_range:
+        #         self._avoid_obstacles_and_move(nearest_enemy.position, obstacles)
+        # else:
+        #     # Если нет врагов, двигаемся к вражеской базе
+        #     self.move_along_path(np.array([enemy_base.x, enemy_base.y]), obstacles)
 
     def _avoid_obstacles_and_move(self, target_position: np.ndarray, obstacles: List['Obstacle']) -> None:
         """Движение к цели с обходом препятствий"""
@@ -367,30 +395,71 @@ class RangedRobot(Robot):
         if not self.is_alive():
             return
 
-        # Обновление снарядов
-        self._update_projectiles(enemies, enemy_base)
+        # Новый код: Проверка команды
+        if self.team == Team.BLUE:  # Команда, которая следует текущему алгоритму
+            # Обновление снарядов
+            self._update_projectiles(enemies, enemy_base)
 
-        # Проверка возможности атаки базы
-        base_distance = np.linalg.norm(self.position - np.array([enemy_base.x, enemy_base.y]))
-        if self.optimal_range <= base_distance <= self.attack_range:
-            self._attack_base_with_projectile(enemy_base)
-            return
+            # Проверка возможности атаки базы
+            base_distance = np.linalg.norm(self.position - np.array([enemy_base.x, enemy_base.y]))
+            if self.optimal_range <= base_distance <= self.attack_range:
+                self._attack_base_with_projectile(enemy_base)
+                return
 
-        # Существующая логика
-        nearest_enemy = self._find_nearest_enemy(enemies)
-        if nearest_enemy:
-            dist_to_enemy = self.distance_to(nearest_enemy.position)
+            # Существующая логика
+            nearest_enemy = self._find_nearest_enemy(enemies)
+            if nearest_enemy:
+                dist_to_enemy = self.distance_to(nearest_enemy.position)
 
-            if dist_to_enemy < self.retreat_range:
-                # Отступление
-                retreat_pos = self.position + (self.position - nearest_enemy.position) * 2
-                self.move_along_path(retreat_pos, obstacles)
-            elif dist_to_enemy > self.optimal_range:
-                # Сближение
-                self.move_along_path(nearest_enemy.position, obstacles)
-            elif dist_to_enemy <= self.attack_range:
-                # Атака
-                self._attack(nearest_enemy)
+                if dist_to_enemy < self.retreat_range:
+                    # Отступление
+                    retreat_pos = self.position + (self.position - nearest_enemy.position) * 2
+                    self.move_along_path(retreat_pos, obstacles)
+                elif dist_to_enemy > self.optimal_range:
+                    # Сближение
+                    self.move_along_path(nearest_enemy.position, obstacles)
+                elif dist_to_enemy <= self.attack_range:
+                    # Атака
+                    self._attack(nearest_enemy)
+        else:  # Команда, которая просто идет к базе противника
+            # Обновление снарядов
+            self._update_projectiles(enemies, enemy_base)
+
+            # Проверка возможности атаки базы
+            base_distance = np.linalg.norm(self.position - np.array([enemy_base.x, enemy_base.y]))
+            if self.optimal_range <= base_distance <= self.attack_range:
+                self._attack_base_with_projectile(enemy_base)
+                return
+            self.move_along_path(np.array([enemy_base.x, enemy_base.y]), obstacles)
+
+        # Старый код (закомментирован):
+        # if not self.is_alive():
+        #     return
+        #
+        # # Обновление снарядов
+        # self._update_projectiles(enemies, enemy_base)
+        #
+        # # Проверка возможности атаки базы
+        # base_distance = np.linalg.norm(self.position - np.array([enemy_base.x, enemy_base.y]))
+        # if self.optimal_range <= base_distance <= self.attack_range:
+        #     self._attack_base_with_projectile(enemy_base)
+        #     return
+        #
+        # # Существующая логика
+        # nearest_enemy = self._find_nearest_enemy(enemies)
+        # if nearest_enemy:
+        #     dist_to_enemy = self.distance_to(nearest_enemy.position)
+        #
+        #     if dist_to_enemy < self.retreat_range:
+        #         # Отступление
+        #         retreat_pos = self.position + (self.position - nearest_enemy.position) * 2
+        #         self.move_along_path(retreat_pos, obstacles)
+        #     elif dist_to_enemy > self.optimal_range:
+        #         # Сближение
+        #         self.move_along_path(nearest_enemy.position, obstacles)
+        #     elif dist_to_enemy <= self.attack_range:
+        #         # Атака
+        #         self._attack(nearest_enemy)
 
     def _update_projectiles(self, enemies: List[Robot], enemy_base: 'GameBase') -> None:
         """Обновление всех активных снарядов"""
@@ -518,25 +587,56 @@ class TankRobot(Robot):
         if not self.is_alive():
             return
 
-        # Проверка возможности атаки базы
-        if self._can_attack_base(enemy_base):
-            self._attack_base(enemy_base)
-            return
+        # Новый код: Проверка команды
+        if self.team == Team.BLUE:  # Команда, которая следует текущему алгоритму
+            # Проверка возможности атаки базы
+            if self._can_attack_base(enemy_base):
+                self._attack_base(enemy_base)
+                return
 
-        # Защита союзников
-        weak_ally = self._find_weakest_ally(allies)
-        if weak_ally and weak_ally.health < weak_ally.max_health * 0.5:
-            self.move_along_path(weak_ally.position, obstacles)
+            # Защита союзников
+            weak_ally = self._find_weakest_ally(allies)
+            if weak_ally and weak_ally.health < weak_ally.max_health * 0.5:
+                self.move_along_path(weak_ally.position, obstacles)
 
-            # Атака врагов вблизи слабого союзника
-            for enemy in enemies:
-                if (enemy.is_alive() and
-                    enemy.distance_to(weak_ally.position) <= enemy.attack_range and
-                    self.distance_to(enemy.position) <= self.attack_range):
-                    self._attack(enemy)
-        else:
-            # Если нет слабых союзников, двигаемся к вражеской базе
+                # Атака врагов вблизи слабого союзника
+                for enemy in enemies:
+                    if (enemy.is_alive() and
+                        enemy.distance_to(weak_ally.position) <= enemy.attack_range and
+                        self.distance_to(enemy.position) <= self.attack_range):
+                        self._attack(enemy)
+            else:
+                # Если нет слабых союзников, двигаемся к вражеской базе
+                self.move_along_path(np.array([enemy_base.x, enemy_base.y]), obstacles)
+        else:  # Команда, которая просто идет к базе противника
+            if self._can_attack_base(enemy_base):
+                self._attack_base(enemy_base)
+                return
             self.move_along_path(np.array([enemy_base.x, enemy_base.y]), obstacles)
+
+        # Старый код (закомментирован):
+        # if not self.is_alive():
+        #     return
+        #
+        # # Проверка возможности атаки базы
+        # if self._can_attack_base(enemy_base):
+        #     self._attack_base(enemy_base)
+        #     return
+        #
+        # # Защита союзников
+        # weak_ally = self._find_weakest_ally(allies)
+        # if weak_ally and weak_ally.health < weak_ally.max_health * 0.5:
+        #     self.move_along_path(weak_ally.position, obstacles)
+        #
+        #     # Атака врагов вблизи слабого союзника
+        #     for enemy in enemies:
+        #         if (enemy.is_alive() and
+        #             enemy.distance_to(weak_ally.position) <= enemy.attack_range and
+        #             self.distance_to(enemy.position) <= self.attack_range):
+        #             self._attack(enemy)
+        # else:
+        #     # Если нет слабых союзников, двигаемся к вражеской базе
+        #     self.move_along_path(np.array([enemy_base.x, enemy_base.y]), obstacles)
 
     def take_damage(self, damage: float) -> None:
         """Переопределенное получение урона с учетом брони"""
